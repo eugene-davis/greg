@@ -27,6 +27,7 @@ import time
 import unicodedata
 import string
 import json
+from pathlib import PurePath
 from urllib.request import urlopen
 from urllib.error import URLError
 
@@ -228,6 +229,11 @@ def download_handler(feed, placeholders):
             # check if request went ok
             if fin.getcode() != 200:
                 raise URLError
+            # Get path object for filename
+            filename_path = PurePath(placeholders.filename)
+            # check if filename is "media.ext" or already exists and replace with the episode title
+            if filename_path.stem == "media" or  os.path.isfile(placeholders.get_fullpath()):
+                placeholders.filename = placeholders.filename_title + filename_path.suffix
             # check if fullpath allready exists
             while os.path.isfile(placeholders.get_fullpath()):
                 placeholders.filename = placeholders.filename + '_'
