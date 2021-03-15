@@ -229,9 +229,10 @@ def download_handler(feed, placeholders):
             # check if request went ok
             if fin.getcode() != 200:
                 raise URLError
-            # check if filename is "media.ext" or already exists and replace with the episode title
+            # check if filename maches the "dedupfilename" (e.g. "media") or already exists and replace with the episode title
+            dedup_filename = feed.retrieve_config("dedupfilename", "media")
             filename_path = PurePath(placeholders.filename)
-            if filename_path.stem == "media" or os.path.isfile(placeholders.get_fullpath()):
+            if filename_path.stem == dedup_filename or os.path.isfile(placeholders.get_fullpath()):
                 placeholders.filename = placeholders.filename_title + filename_path.suffix
             # check filename is the podcast title add the link date
             filename_path = PurePath(placeholders.filename)
