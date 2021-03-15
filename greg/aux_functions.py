@@ -234,9 +234,10 @@ def download_handler(feed, placeholders):
             # check if filename is "media.ext" or already exists and replace with the episode title
             if filename_path.stem == "media" or  os.path.isfile(placeholders.get_fullpath()):
                 placeholders.filename = placeholders.filename_title + filename_path.suffix
-            # check if fullpath allready exists
+            # check if fullpath still exists, if so append underscores to the name until it works
             while os.path.isfile(placeholders.get_fullpath()):
-                placeholders.filename = placeholders.filename + '_'
+                filename_path = PurePath(placeholders.filename)
+                placeholders.filename = filename_path.stem + '_' + filename_path.suffix
             # write content to file
             with open(placeholders.get_fullpath(),'wb') as fout:
                 fout.write(fin.read())
