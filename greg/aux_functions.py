@@ -229,11 +229,14 @@ def download_handler(feed, placeholders):
             # check if request went ok
             if fin.getcode() != 200:
                 raise URLError
-            # Get path object for filename
-            filename_path = PurePath(placeholders.filename)
             # check if filename is "media.ext" or already exists and replace with the episode title
-            if filename_path.stem == "media" or  os.path.isfile(placeholders.get_fullpath()):
+            filename_path = PurePath(placeholders.filename)
+            if filename_path.stem == "media" or os.path.isfile(placeholders.get_fullpath()):
                 placeholders.filename = placeholders.filename_title + filename_path.suffix
+            # check filename is the podcast title add the link date
+            filename_path = PurePath(placeholders.filename)
+            if filename_path.stem == placeholders.name:
+                placeholders.filename = placeholders.date_string() + "_"  + placeholders.filename
             # check if fullpath still exists, if so append underscores to the name until it works
             while os.path.isfile(placeholders.get_fullpath()):
                 filename_path = PurePath(placeholders.filename)
