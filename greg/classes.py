@@ -373,3 +373,6 @@ class Placeholders:
     def date_string(self):
         date_format = self.feed.retrieve_config("date_format", "%Y-%m-%d")
         return time.strftime(date_format, self.date)
+
+    def get_timestamp(self):
+        return str(int(time.mktime(self.date)))
