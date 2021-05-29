@@ -211,7 +211,7 @@ class Feed():
         """
         wanttags = self.retrieve_config('Tag', 'no')
         if wanttags == 'yes':
-            if aux.music-tagExists:
+            if aux.musictagExists:
                 willtag = True
             else:
                 willtag = False

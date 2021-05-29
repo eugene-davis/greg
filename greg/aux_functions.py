@@ -35,9 +35,9 @@ import feedparser
 
 try:  # music-tag is an optional dependency
     import music_tag
-    music-tagExists = True
+    musictagExists = True
 except ImportError:
-    music-tagExists = False
+    musictagExists = False
 
 try:  # beautifulsoup4 is an optional dependency
     from bs4 import BeautifulSoup
