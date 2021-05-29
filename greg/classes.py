@@ -110,6 +110,7 @@ class Feed():
         self.willtag = self.will_tag()
         if self.willtag:
             self.defaulttagdict = self.default_tag_dict()
+            self.defaulttagdict_musictag = self.default_tag_dict_musictag()
         self.mime = self.retrieve_mime()
         self.wentwrong = False
         if self.podcast.bozo: # the bozo bit is on, see feedparser docs
@@ -146,6 +147,12 @@ class Feed():
         tags = [[option.replace(
             "tag_", ""), defaultoptions[option]] for option
             in defaultoptions if "tag_" in option]
+        # these are the tags to be filled
+        return dict(tags)
+
+    def default_tag_dict_musictag(self):
+        defaultoptions = self.config.defaults()
+        tags = aux.convert_tags(defaultoptions)
         # these are the tags to be filled
         return dict(tags)
 
@@ -211,12 +218,12 @@ class Feed():
         """
         wanttags = self.retrieve_config('Tag', 'no')
         if wanttags == 'yes':
-            if aux.musictagExists:
+            if aux.musictagExists or aux.musictagExists:
                 willtag = True
             else:
                 willtag = False
                 print(("You want me to tag {0}, but you have not installed "
-                       "the EyeD3 module. I cannot honour your request.").
+                       "the EyeD3 or the music-tag module. I cannot honour your request.").
                       format(self.name), file=sys.stderr, flush=True)
         else:
             willtag = False

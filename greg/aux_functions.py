@@ -33,7 +33,12 @@ from urllib.error import URLError
 from pkg_resources import resource_filename
 import feedparser
 
-try:  # music-tag is an optional dependency
+try:  # EyeD3 is an optional dependency
+    import eyed3
+    eyed3exists = True
+except ImportError:
+    eyed3exists = False
+try:  # music-tag is an optional dependency which handles more file types than eyed3, but supports fewer tags
     import music_tag
     musictagExists = True
 except ImportError:
@@ -177,27 +182,52 @@ def tag(placeholders):
     podpath = os.path.join(placeholders.directory, filename)
     # ... and this is it
 
-    # now we create a dictionary of tags and values
-    tagdict = placeholders.feed.defaulttagdict  # these are the defaults
-    try:  # We do as if there was a section with potential tag info
-        feedoptions = placeholders.feed.config.options(placeholders.name)
-        # this monstruous concatenation of classes... surely a bad idea.
-        tags = [[option.replace("tag_", ""), placeholders.feed.config[
-            placeholders.name][option]] for option in feedoptions if "tag_" in
-                option]  # these are the tags to be filled
-        if tags:
-            for tag in tags:
-                tagdict[tag[0]] = tag[1]
-    except configparser.NoSectionError:
-        pass
-    for tag in tagdict:
-        metadata = substitute_placeholders(tagdict[tag], placeholders)
-        tagdict[tag] = metadata
-    file_to_tag = music_tag.load_file(podpath)
-    for mytag in tagdict:
-        file_to_tag[mytag] = tagdict[mytag]
-    file_to_tag.tag.save()
-    
+    # Handle tagging mp3 files with eyed3
+    if eyed3exists and os.path.splitext(filename)[-1] == ".mp3":
+        # now we create a dictionary of tags and values
+        tagdict = placeholders.feed.defaulttagdict  # these are the defaults
+        try:  # We do as if there was a section with potential tag info
+            feedoptions = placeholders.feed.config.options(placeholders.name)
+            # this monstruous concatenation of classes... surely a bad idea.
+            tags = [[option.replace("tag_", ""), placeholders.feed.config[
+                placeholders.name][option]] for option in feedoptions if "tag_" in
+                    option]  # these are the tags to be filled
+            if tags:
+                for tag in tags:
+                    tagdict[tag[0]] = tag[1]
+        except configparser.NoSectionError:
+            pass
+
+        for tag in tagdict:
+            metadata = substitute_placeholders(tagdict[tag], placeholders)
+            tagdict[tag] = metadata
+        file_to_tag = eyed3.load(podpath)
+        if file_to_tag.tag == None:
+            file_to_tag.initTag()
+        for mytag in tagdict:
+            setattr(file_to_tag.tag, mytag, tagdict[mytag])
+        file_to_tag.tag.save()
+    # Handle tagging anything else with music-tag
+    elif musictagExists:
+        # now we create a dictionary of tags and values
+        tagdict = placeholders.feed.defaulttagdict  # these are the defaults
+        try:  # We do as if there was a section with potential tag info
+            feedoptions = placeholders.feed.config.options(placeholders.name)
+            # this monstruous concatenation of classes... surely a bad idea.
+            tags = convert_tags(feedoptions, placeholders.feed.config[placeholders.name]) # these are the tags to be filled
+            if tags:
+                for tag in tags:
+                    tagdict[tag[0]] = tag[1]
+        except configparser.NoSectionError:
+            pass
+
+        for tag in tagdict:
+            metadata = substitute_placeholders(tagdict[tag], placeholders)
+            tagdict[tag] = metadata
+        file_to_tag = music_tag.load_file(podpath)
+        for mytag in tagdict:
+            file_to_tag[mytag] = tagdict[mytag]
+        file_to_tag.save()
 
 
 def filtercond(placeholders):
@@ -335,3 +365,45 @@ def substitute_placeholders(inputstring, placeholders):
                                subtitle=placeholders.sanitizedsubtitle,
                                entrysummary=placeholders.entrysummary)
     return newst
+
+def convert_tags(incoming_tags, feed_config = None):
+    """
+    Convert tags for use with music-tag library
+    """
+    print(incoming_tags)
+    tags = []
+    convert_tags = {
+        "tag_title": "tracktitle",
+        "tag_date": "year",
+        "tag_track": "tracknumber",
+        "tag_track-total": "totaltracks",
+        "tag_disc-total": "totaldiscs",
+        "tag_picture": "artwork"
+    }
+    for incoming in incoming_tags:
+        for tag, tag_replace in convert_tags.items():
+            if incoming == tag:
+                # This is the case when defaults are being converted
+                if not feed_config:
+                    tags.append([tag_replace, incoming_tags[incoming]])
+                # This is the case when the feed-specific tags are being converted
+                else:
+                    tags.append([tag_replace, feed_config[incoming]])
+                break
+        else:
+            if "tag_" in incoming:
+                if not feed_config:
+                    tags.append([incoming.replace("tag_", ""), incoming_tags[incoming]])
+                else:
+                    tags.append([incoming.replace("tag_", ""), feed_config[incoming]])
+    
+    # remove
+    #tags.append(['totaltracks', str(sys.maxsize)])
+    for tag in tags:
+        if tag[0] == "tracknumber":
+            tags.remove(tag)
+        if tag[0] == "artwork":
+            tags.remove(tag)
+
+    print(tags)
+    return tags
