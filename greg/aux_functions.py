@@ -195,7 +195,7 @@ def tag(placeholders):
         tagdict[tag] = metadata
     file_to_tag = music_tag.load_file(podpath)
     for mytag in tagdict:
-        setattr(file_to_tag.tag, mytag, tagdict[mytag])
+        file_to_tag[mytag] = tagdict[mytag]
     file_to_tag.tag.save()
     
 
