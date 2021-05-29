@@ -33,11 +33,11 @@ from urllib.error import URLError
 from pkg_resources import resource_filename
 import feedparser
 
-try:  # EyeD3 is an optional dependency
-    import eyed3
-    eyed3exists = True
+try:  # music-tag is an optional dependency
+    import music_tag
+    music-tagExists = True
 except ImportError:
-    eyed3exists = False
+    music-tagExists = False
 
 try:  # beautifulsoup4 is an optional dependency
     from bs4 import BeautifulSoup
@@ -193,9 +193,7 @@ def tag(placeholders):
     for tag in tagdict:
         metadata = substitute_placeholders(tagdict[tag], placeholders)
         tagdict[tag] = metadata
-    file_to_tag = eyed3.load(podpath)
-    if file_to_tag.tag == None:
-        file_to_tag.initTag()
+    file_to_tag = music_tag.load_file(podpath)
     for mytag in tagdict:
         setattr(file_to_tag.tag, mytag, tagdict[mytag])
     file_to_tag.tag.save()

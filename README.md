@@ -140,7 +140,7 @@ Let us add another feed:
 
 This is a great program on ancient music at the Spanish public radio. The thing
 is, these guys do not tag their episodes, which is bad for most portable media
-players. Greg uses [EyeD3](https://github.com/nicfit/eyeD3) (as an optional
+players. Greg uses [music-tag](https://github.com/KristoforMaynard/music-tag) (as an optional
 dependency) to tag podcasts, if one so wishes. By default, it uses the podcast
 name for the *artist* tag, and the entry title for the *title* tag. To enable
 tagging for MusicaAntigua, copy the system-wide config file locally. (see
